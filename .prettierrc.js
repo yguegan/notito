@@ -1,3 +1,5 @@
+const { NativeEventEmitter } = require("react-native");
+
 module.exports = {
   bracketSpacing: false,
   jsxBracketSameLine: true,
@@ -13,5 +15,6 @@ module.exports = {
       },
       "esSpecCompliant": true
     }
-  ]
+  ],
+  "comma-dangle": "never",
 };

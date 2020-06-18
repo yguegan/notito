@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 import React, {Component} from 'react';
 import {
   FlatList,
@@ -18,7 +19,7 @@ class NoteList extends Component {
     this.state = {
       notes: []
     };
-    this.noteDao = new NoteDao();
+    this.noteDao = props.noteDao || new NoteDao();
     this.noteDao.getNotesFromDatabase(notes => {
       this.setState(
         (this.state = {
@@ -35,22 +36,22 @@ class NoteList extends Component {
     }
   }
 
+  renderDeleteButton = () => (
+    <TouchableOpacity
+      style={styles.rigthNavigationButton}
+      onPress={() => this.deleteNote()}
+      testID="btnRemoveSelectedNotes">
+      <Image
+        source={require('../images/remove-note.png')}
+        style={styles.imageIconStyle}
+      />
+    </TouchableOpacity>
+  )
+
   updateNavigationButtons = () => {
     this.props.navigation.setOptions({
-      headerRight: state =>
-        this.isSelectModeEnabled() ? (
-          <TouchableOpacity
-            style={styles.rigthNavigationButton}
-            onPress={() => this.deleteNote()}
-            testID="btnRemoveSelectedNotes">
-            <Image
-              source={require('../images/remove-note.png')}
-              style={styles.imageIconStyle}
-            />
-          </TouchableOpacity>
-        ) : (
-          undefined
-        )
+      headerRight: () =>
+        this.isSelectModeEnabled() ? this.renderDeleteButton() : undefined
     });
   };
 
@@ -144,7 +145,7 @@ class NoteList extends Component {
         </TouchableHighlight>
       </>
     );
-  }
+  };
 }
 
 const styles = StyleSheet.create({
