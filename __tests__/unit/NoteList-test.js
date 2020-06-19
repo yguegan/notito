@@ -174,7 +174,7 @@ describe('NoteList component', () => {
       );
     });
 
-    it('should call navigation setOptions method when the user select a note', async () => {
+    it('should update the navigation bar when the user select a note', async () => {
       let mockResult;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');
@@ -191,11 +191,13 @@ describe('NoteList component', () => {
         mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
       });
 
+      mockResult.getInstance().updateNavigationButtons = jest.fn();
+
       await act(async () => {
-        mockResult.root.findByType(NoteView).props.onLongSelect(note);
+        mockResult.getInstance().selectNote(new Note(1, 'Updated note', 'This note should involve some navigation button updates'));
       });
 
-      expect(mockNavigation.setOptions).toHaveBeenCalled();
+      expect(mockResult.getInstance().updateNavigationButtons).toHaveBeenCalled();
     });
 
     it('should call navigation setOptions method with a button with id btnRemoveSelectedNotes on the right menu part when the user select a note', async () => {
@@ -285,24 +287,26 @@ describe('NoteList component', () => {
       });
 
       await act(async () => {
-        mockResult.root.findAllByType(NoteView)[0].props.onLongSelect(note);
-        mockResult.root
-          .findAllByType(NoteView)[2]
-          .props.onLongSelect(noteThree);
+        mockResult.getInstance().selectNote(note);
+        mockResult.getInstance().selectNote(noteThree);
       });
 
       expect(mockResult.getInstance().state.notes.filter(note => note.isSelected).length).toEqual(
         2
       );
     });
+  });
 
-    it('should delete the selected NoteView once click on delete button', async () => {
+  describe('Call deleteNote', () => {
+    it('should delete the selected note', async () => {
       let mockResult;
       let setOptionsParameter;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');
       const noteTwo = new Note(2, 'test title 2', 'test description 2');
       const noteThree = new Note(3, 'test title 3', 'test description 3');
+      note.isSelected = true;
+      noteThree.isSelected = true;
       expectedNotes.push(note);
       expectedNotes.push(noteTwo);
       expectedNotes.push(noteThree);
@@ -325,17 +329,93 @@ describe('NoteList component', () => {
       });
 
       await act(async () => {
-        mockResult.root.findAllByType(NoteView)[0].props.onLongSelect(note);
-        mockResult.root
-          .findAllByType(NoteView)[2]
-          .props.onLongSelect(noteThree);
-      });
-
-      await act(async () => {
-        setOptionsParameter.headerRight().props.onPress();
+        mockResult.getInstance().deleteNote();
       });
 
       expect(mockResult.getInstance().state.notes.length).toEqual(1);
+      expect(mockResult.getInstance().state.notes.filter(n => (note.isEqual(n) || noteThree.isEqual(n))).length).toEqual(0);
+      expect(mockResult.getInstance().state.notes.filter(n => n.isSelected).length).toEqual(0);
+    });
+
+    it('should call the dao to save the new state', async () => {
+      let mockResult;
+      let newNoteCollectionToSave;
+      let isSaveCollectionFromDaoCalled = false;
+      const expectedNotes = [];
+      const note = new Note(1, 'test title', 'test description');
+      const noteTwo = new Note(2, 'test title 2', 'test description 2');
+      const noteThree = new Note(3, 'test title 3', 'test description 3');
+      note.isSelected = true;
+      noteThree.isSelected = true;
+      expectedNotes.push(note);
+      expectedNotes.push(noteTwo);
+      expectedNotes.push(noteThree);
+
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async (notes) => {
+          isSaveCollectionFromDaoCalled = true;
+          newNoteCollectionToSave = notes;
+        }
+      }
+
+      const mockNavigation = {
+        setOptions: () => {}
+      }
+
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao}/>);
+      });
+
+      await act(async () => {
+        mockResult.getInstance().deleteNote();
+      });
+
+      expect(isSaveCollectionFromDaoCalled).toEqual(true);
+      expect(mockResult.getInstance().state.notes).toEqual(newNoteCollectionToSave);
+    });
+
+    it('should update the navigation buttons once notes removed', async () => {
+      let mockResult;
+      let newNoteCollectionToSave;
+      let isSaveCollectionFromDaoCalled = false;
+      const expectedNotes = [];
+      const note = new Note(1, 'test title', 'test description');
+      const noteTwo = new Note(2, 'test title 2', 'test description 2');
+      const noteThree = new Note(3, 'test title 3', 'test description 3');
+      note.isSelected = true;
+      noteThree.isSelected = true;
+      expectedNotes.push(note);
+      expectedNotes.push(noteTwo);
+      expectedNotes.push(noteThree);
+
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async (notes) => {
+          isSaveCollectionFromDaoCalled = true;
+          newNoteCollectionToSave = notes;
+        }
+      }
+
+      const mockNavigation = {
+        setOptions: () => {}
+      }
+
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao}/>);
+      });
+
+      mockResult.getInstance().updateNavigationButtons = jest.fn();
+
+      await act(async () => {
+        mockResult.getInstance().deleteNote();
+      });
+
+      expect(mockResult.getInstance().updateNavigationButtons).toHaveBeenCalled();
     });
 
     it('should hide the delete button once the selected note deleted', async () => {
@@ -382,6 +462,40 @@ describe('NoteList component', () => {
       });
 
       expect(setOptionsParameter.headerRight()).toEqual(undefined);
+    });
+  });
+
+  describe('call generateNewEmptyNote', () => {
+    it('should return an empty note with an id generated by the Dao', async () => {
+      let mockResult;
+      let generatedNote;
+      const generatedId = 233;
+      const notes = [];
+      const expectedNoteCreation = new Note(generatedId, '', '');
+
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(notes);
+        },
+        generateNewIdNote: () => {
+          return generatedId
+        }
+      }
+
+      const mockNavigation = {
+        navigate: jest.fn(),
+        setOptions: () => {}
+      }
+
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao}/>);
+      });
+
+      await act(async () => {
+        generatedNote = mockResult.getInstance().generateNewEmptyNote();
+      });
+
+      expect(expectedNoteCreation.isEqual(generatedNote)).toEqual(true);
     });
   });
 

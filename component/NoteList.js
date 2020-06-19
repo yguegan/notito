@@ -88,7 +88,7 @@ class NoteList extends Component {
     this.setState({notes: newNotesList}, () =>
       this.noteDao.saveNotesCollection(this.state.notes)
     );
-    this.clearSelection();
+    this.updateNavigationButtons();
   };
 
   generateNewEmptyNote = () => {
@@ -96,7 +96,11 @@ class NoteList extends Component {
   };
 
   clearSelection = () => {
-    this.updateNavigationButtons();
+    const notes = this.state.notes;
+    notes.map(note => {
+      note.isSelected = false;
+    });
+    this.setState({notes: notes}, this.updateNavigationButtons);
   };
 
   goToNoteCreation = () => {

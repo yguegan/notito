@@ -36,7 +36,7 @@ class NoteDao {
     try {
       await AsyncStorage.setItem('@Notes', JSON.stringify(notes));
     } catch (e) {
-      console.log('error save notes');
+      // error reading value
     }
   };
 
