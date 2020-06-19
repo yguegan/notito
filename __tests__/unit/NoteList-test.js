@@ -94,8 +94,8 @@ describe('NoteList component', () => {
     });
   });
 
-  describe('long click on a note', () => {
-    it('should change the isSelected to true when doing an long click on the NoteView', async () => {
+  describe('call selectNote', () => {
+    it('should change the isSelected to true for the note set as parameter when calling selectNote and the isSelected attribute is false', async () => {
       let mockResult;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');
@@ -113,15 +113,42 @@ describe('NoteList component', () => {
       });
 
       await act(async () => {
-        mockResult.root.findByType(NoteView).props.onLongSelect(note);
+        mockResult.getInstance().selectNote(note);
       });
 
-      expect(mockResult.root.findByType(NoteView).props.isSelected).toEqual(
+      expect(mockResult.getInstance().state.notes.filter(n => note.isEqual(n))[0].isSelected).toEqual(
         true
       );
     });
 
-    it('should change the isSelected to false when doing a click on a selected NoteView', async () => {
+    it('should change the isSelected to true for the note set as parameter when calling selectNote and the isSelected attribute is false', async () => {
+      let mockResult;
+      const expectedNotes = [];
+      const note = new Note(1, 'test title', 'test description');
+      note.isSelected = true;
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        }
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        mockResult.getInstance().selectNote(note);
+      });
+
+      expect(mockResult.getInstance().state.notes.filter(n => note.isEqual(n))[0].isSelected).toEqual(
+        false
+      );
+    });
+
+    it('should not change the isSelected attribute if the note does not exist in the state', async () => {
       let mockResult;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');
@@ -139,15 +166,11 @@ describe('NoteList component', () => {
       });
 
       await act(async () => {
-        mockResult.root.findByType(NoteView).props.onLongSelect(note);
+        mockResult.getInstance().selectNote(new Note(789, 'Non existing note', 'This note should not been reflected in the state'));
       });
 
-      await act(async () => {
-        mockResult.root.findByType(NoteView).props.onSelect(note);
-      });
-
-      expect(mockResult.root.findByType(NoteView).props.isSelected).toEqual(
-        false
+      expect(mockResult.getInstance().state.notes.filter(n => n.isSelected).length).toEqual(
+        0
       );
     });
 
@@ -463,6 +486,258 @@ describe('NoteList component', () => {
 
       expect(mockNavigation.navigate).toHaveBeenCalled();
       expect(mockNavigation.navigate).toHaveBeenCalledWith('NoteEdition', {note: expectedNoteCreation});
+    });
+  });
+
+  describe('call updateNote', () => {
+    it('should add a new note if the id of the note is note matching with any existing note', async () => {
+      let mockResult;
+      const expectedNotes = [];
+      const noteToAdd = new Note(322, 'my new note here', 'note created to test creation behavior');
+      const note = new Note(1, 'test title', 'test description');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async () => {}
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        mockResult.getInstance().updateNote(noteToAdd);
+      });
+      
+      expect(mockResult.getInstance().state.notes.length).toEqual(2);
+      expect(mockResult.getInstance().state.notes[1]).toEqual(noteToAdd);
+    });
+
+    it('should update a note if the id of the note is matching with an existing note', async () => {
+      let mockResult;
+      const expectedNotes = [];
+      const note = new Note(1, 'test title', 'test description');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async () => {}
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        note.description = 'update test description to see if we are updating the existing note';
+        mockResult.getInstance().updateNote(note);
+      });
+      
+      expect(mockResult.getInstance().state.notes.length).toEqual(1);
+      expect(mockResult.getInstance().state.notes[0]).toEqual(note);
+    });
+
+    it('should call the dao save collection method with the modification reflected when creating a new note', async () => {
+      let mockResult;
+      let isSaveNoteCollectionCalled = false;
+      let savedNotes;
+      const expectedNotes = [];
+      const noteToAdd = new Note(322, 'my new note here', 'note created to check we are calling the dao save collection');
+      const note = new Note(1, 'test title', 'test description');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async (notes) => {
+          isSaveNoteCollectionCalled = true;
+          savedNotes = notes;
+        }
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        mockResult.getInstance().updateNote(noteToAdd);
+      });
+      
+      expect(isSaveNoteCollectionCalled).toEqual(true);
+      expect(savedNotes).toEqual(mockResult.getInstance().state.notes);
+    });
+
+    it('should call the dao save collection method with the modification reflected when updating a note', async () => {
+      let mockResult;
+      let isSaveNoteCollectionCalled = false;
+      let savedNotes;
+      const expectedNotes = [];
+      const note = new Note(1, 'test title', 'test description');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async (notes) => {
+          isSaveNoteCollectionCalled = true;
+          savedNotes = notes;
+        }
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        note.description = 'update test description to see if we are calling save note';
+        mockResult.getInstance().updateNote(note);
+      });
+      
+      expect(isSaveNoteCollectionCalled).toEqual(true);
+      expect(savedNotes).toEqual(mockResult.getInstance().state.notes);
+    });
+  });
+
+  describe('call componentDidUpdate', () => {
+    it('should set route.params.note to null when it is containing a note', async () => {
+      let mockResult;
+      const expectedNotes = [];
+      const noteToAdd = new Note(322, 'my new note here', 'note created to test creation behavior');
+      const note = new Note(1, 'test title', 'test description');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async () => {}
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+
+      const mockRoute = {
+        params: {
+          note: noteToAdd
+        }
+      }
+
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        mockResult.update(<NoteList route={mockRoute} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+      
+      expect(mockResult.getInstance().props.route.params.note).toEqual(null);
+    });
+
+    it('should update the state of notes when route is containing a new note', async () => {
+      let mockResult;
+      const expectedNotes = [];
+      const noteToAdd = new Note(322, 'my new note here', 'note created to test creation behavior');
+      const note = new Note(1, 'test title', 'test description');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async () => {}
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+
+      const mockRoute = {
+        params: {
+          note: noteToAdd
+        }
+      }
+
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        mockResult.update(<NoteList route={mockRoute} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+      
+      expect(mockResult.getInstance().state.notes.length).toEqual(2);
+      expect(mockResult.getInstance().state.notes[1]).toEqual(noteToAdd);
+    });
+
+    it('should update the state of notes when route is containing an updated note', async () => {
+      let mockResult;
+      const expectedNotes = [];
+      const note = new Note(1, 'test title', 'test description');
+      const updatedNote = new Note(1, 'test title', 'test description after update');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async () => {}
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+
+      const mockRoute = {
+        params: {
+          note: updatedNote
+        }
+      }
+
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        mockResult.update(<NoteList route={mockRoute} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+      
+      expect(mockResult.getInstance().state.notes.length).toEqual(1);
+      expect(mockResult.getInstance().state.notes[0]).toEqual(updatedNote);
+    });
+
+    it('should keep the state as it is if route params is undefined', async () => {
+      let mockResult;
+      const expectedNotes = [];
+      const note = new Note(1, 'test title', 'test description');
+      const updatedNote = new Note(1, 'test title', 'test description after update');
+      expectedNotes.push(note);
+      const mockNoteDao = {
+        getNotesFromDatabase: async callback => {
+          callback(expectedNotes);
+        },
+        saveNotesCollection: async () => {}
+      }
+      const mockNavigation = {
+        setOptions: options => options
+      }
+
+      const mockRoute = {}
+
+      await act(async () => {
+        mockResult = create(<NoteList route={{}} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      await act(async () => {
+        mockResult.update(<NoteList route={mockRoute} navigation={mockNavigation} noteDao={mockNoteDao} />);
+      });
+
+      expect(mockResult.getInstance().state.notes).toEqual(expectedNotes);
     });
   });
 });
