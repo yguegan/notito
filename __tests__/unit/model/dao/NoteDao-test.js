@@ -7,8 +7,8 @@ import 'react-native';
 import 'react';
 import AsyncStorage from '@react-native-community/async-storage';
 
-import NoteDao from '../../../model/dao/NoteDao';
-import Note from '../../../model/Note';
+import NoteDao from '../../../../model/dao/NoteDao';
+import Note from '../../../../model/Note';
 
 describe('NoteDao', () => {
   beforeEach(async () => {

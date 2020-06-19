@@ -5,7 +5,7 @@
 import 'react-native-gesture-handler';
 import 'react-native';
 
-import Note from '../../model/Note';
+import Note from '../../../model/Note';
 
 describe('note', () => {
   describe('constructor', () => {

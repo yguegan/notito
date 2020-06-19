@@ -4,13 +4,9 @@ import 'react-native';
 import React from 'react';
 import {create, act} from 'react-test-renderer';
 
-import AsyncStorage from '@react-native-community/async-storage';
-import MockReactNavigation from '../__mocks__/@react-navigation/MockReactNavigation';
-
-import NoteList from '../component/NoteList';
-import NoteView from '../component/NoteView';
-import NoteEdition from '../component/NoteEdition';
-import Note from '../model/Note';
+import NoteList from '../../component/NoteList';
+import NoteView from '../../component/NoteView';
+import Note from '../../model/Note';
 
 describe('NoteList component', () => {
   describe('rendering', () => {
@@ -241,7 +237,7 @@ describe('NoteList component', () => {
       ).toEqual(undefined);
     });
 
-    it('should change allow the selection of several NoteView', async () => {
+    it('should allow the selection of several NoteView', async () => {
       let mockResult;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');
@@ -272,14 +268,13 @@ describe('NoteList component', () => {
           .props.onLongSelect(noteThree);
       });
 
-      expect(mockResult.root.findAllByProps({isSelected: true}).length).toEqual(
+      expect(mockResult.getInstance().state.notes.filter(note => note.isSelected).length).toEqual(
         2
       );
     });
 
     it('should delete the selected NoteView once click on delete button', async () => {
       let mockResult;
-      let updatedNotes;
       let setOptionsParameter;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');
@@ -293,10 +288,7 @@ describe('NoteList component', () => {
         getNotesFromDatabase: async callback => {
           callback(expectedNotes);
         },
-        saveNotesCollection: async notes => {
-          updatedNotes = notes;
-          done();
-        }
+        saveNotesCollection: async () => {}
       }
 
       const mockNavigation = {
@@ -320,7 +312,7 @@ describe('NoteList component', () => {
         setOptionsParameter.headerRight().props.onPress();
       });
 
-      expect(updatedNotes.length).toEqual(1);
+      expect(mockResult.getInstance().state.notes.length).toEqual(1);
     });
 
     it('should hide the delete button once the selected note deleted', async () => {
@@ -373,7 +365,6 @@ describe('NoteList component', () => {
   describe('click on a specific noteView', () => {
     it('should navigate to NoteEdition screen with the selected note information', async () => {
       let mockResult;
-      let updatedNotes;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');
       const noteTwo = new Note(2, 'test title 2', 'test description 2');
@@ -386,9 +377,7 @@ describe('NoteList component', () => {
         getNotesFromDatabase: async callback => {
           callback(expectedNotes);
         },
-        saveNotesCollection: async notes => {
-          updatedNotes = notes;
-        }
+        saveNotesCollection: async () => {}
       }
 
       const mockNavigation = {
@@ -414,7 +403,6 @@ describe('NoteList component', () => {
       let setOptionsParameter;
       const generatedId = 233;
       const notes = [];
-      const expectedNoteCreation = new Note(generatedId, '', '');
 
       const mockNoteDao = {
         getNotesFromDatabase: async callback => {

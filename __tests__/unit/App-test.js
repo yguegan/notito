@@ -7,7 +7,7 @@ import 'react-native';
 import React from 'react';
 import {create, act} from 'react-test-renderer';
 
-import App from '../component/App';
+import App from '../../component/App';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 
