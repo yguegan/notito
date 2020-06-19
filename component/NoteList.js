@@ -111,7 +111,7 @@ class NoteList extends Component {
   };
 
   goToNoteEdition = selectedNote => {
-    if (selectedNote.isSelected || this.isSelectModeEnabled()) {
+    if (this.isSelectModeEnabled()) {
       this.selectNote(selectedNote);
     } else {
       this.props.navigation.navigate('NoteEdition', {note: selectedNote});
