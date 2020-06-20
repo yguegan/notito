@@ -5,7 +5,6 @@ import React from 'react';
 import {create, act} from 'react-test-renderer';
 
 import NoteList from '../../component/NoteList';
-import NoteView from '../../component/NoteView';
 import Note from '../../model/Note';
 
 describe('NoteList component', () => {
@@ -158,7 +157,7 @@ describe('NoteList component', () => {
       expect(mockResult.getInstance().updateNavigationButtons).toHaveBeenCalled();
     });
 
-    it('should allow the selection of several NoteView', async () => {
+    it('should allow the selection of several notes', async () => {
       let mockResult;
       const expectedNotes = [];
       const note = new Note(1, 'test title', 'test description');

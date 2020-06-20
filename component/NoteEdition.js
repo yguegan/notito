@@ -22,14 +22,16 @@ class NoteEdition extends Component {
     this.updateNavigationButtons();
   }
 
+  navigateToHomePage = () => {
+    this.props.navigation.navigate('Home', {note: this.state.note})
+  }
+
   updateNavigationButtons = () => {
     this.props.navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
           style={styles.rigthNavigationButton}
-          onPress={() =>
-            this.props.navigation.navigate('Home', {note: this.state.note})
-          }>
+          onPress={this.navigateToHomePage}>
           <Image
             source={require('../images/save-note.png')}
             style={styles.imageIconStyle}
@@ -41,7 +43,7 @@ class NoteEdition extends Component {
 
   render() {
     return (
-      <TouchableOpacity onPress={() => this.onSelect(this.state.note)}>
+      <TouchableOpacity>
         <View style={styles.note}>
           <TextInput
             testID="text-input-modification-note-title"
