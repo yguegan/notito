@@ -5,8 +5,8 @@ import React from 'react';
 import {create, act} from 'react-test-renderer';
 
 import AsyncStorage from '@react-native-community/async-storage';
-import MockReactNavigation from '../../__mocks__/@react-navigation/MockReactNavigation';
 
+import App from '../../component/App';
 import NoteView from '../../component/NoteView';
 import NoteEdition from '../../component/NoteEdition';
 import Note from '../../model/Note';
@@ -16,7 +16,7 @@ describe('NoteList component', () => {
     it('should renderer the component with the navigation menu and the right title', async () => {
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       expect(mockResult.toJSON()).toMatchSnapshot();
@@ -25,7 +25,7 @@ describe('NoteList component', () => {
     it('should not renderer any NoteView element if there is no notes in the AsyncStorage', async () => {
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       expect(mockResult.root.findAllByType(NoteView).length).toEqual(0);
@@ -41,7 +41,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       expect(mockResult.root.findAllByType(NoteView).length).toEqual(3);
@@ -56,7 +56,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       expect(mockResult.root.findByType(NoteView).props.note).not.toBeNull();
@@ -72,7 +72,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       expect(
@@ -94,7 +94,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -115,7 +115,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -145,7 +145,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -173,7 +173,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -206,7 +206,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -243,7 +243,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -266,7 +266,7 @@ describe('NoteList component', () => {
 
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -290,7 +290,7 @@ describe('NoteList component', () => {
     it('should open the NoteEdition screen', async () => {
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
@@ -303,7 +303,7 @@ describe('NoteList component', () => {
     it('should open the NoteEdition screen with an empty note', async () => {
       let mockResult;
       await act(async () => {
-        mockResult = create(<MockReactNavigation />);
+        mockResult = create(<App />);
       });
 
       await act(async () => {
